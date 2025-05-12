@@ -1,0 +1,57 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import "primeng/resources/themes/saga-blue/theme.css";
+@import "primeng/resources/primeng.min.css";
+@import "primeicons/primeicons.css";
+
+:root {
+  --primary-color: #ff6600;
+  --primary-dark: #e65c00;
+  --secondary-color: #2c2c2c;
+  --background-dark: #1a1a1a;
+  --text-color: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --primary-gradient: linear-gradient(135deg, #ff6b00, #ff8800);
+  --text-gradient: linear-gradient(135deg, #ffffff, #ff6b00);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--background-dark);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Styles globaux pour les animations de survol */
+.hover-scale {
+  transition: transform 0.3s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Style pour le texte sélectionné */
+::selection {
+  background: #ff6b00;
+  color: white;
+}
