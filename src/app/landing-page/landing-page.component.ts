@@ -47,8 +47,8 @@ export class LandingPageComponent implements OnInit {
   ];
 
   constructor(
-    private oauthService: OAuthService,
-    private router: Router
+    private router: Router,
+    private oauthService: OAuthService
   ) {}
 
   ngOnInit() {

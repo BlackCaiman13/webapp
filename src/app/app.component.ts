@@ -1,25 +1,35 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { RouterModule, RouterOutlet } from '@angular/router';
 import { OAuthService } from 'angular-oauth2-oidc';
 import { Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { PrimeNGConfig } from 'primeng/api';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, RouterOutlet],
   template: `<router-outlet></router-outlet>`,
   styles: []
 })
 export class AppComponent implements OnInit {
   constructor(
     private oauthService: OAuthService,
-    private router: Router
+    private router: Router,
+    private primengConfig: PrimeNGConfig
   ) {}
+ 
+
+   
+        
 
   ngOnInit() {
+
+    this.primengConfig.ripple = true
     // Écoute uniquement les événements de connexion réussie
     this.oauthService.events
+    
+    
       .pipe(
         filter(e => e.type === 'token_received')
       )

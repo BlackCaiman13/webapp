@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { AuthConfig, OAuthService, provideOAuthClient } from 'angular-oauth2-oidc';
 import { provideHttpClient } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
 
 export const authCodeFlowConfig: AuthConfig = {
   issuer: 'http://localhost:8180/realms/my-test-realm',
@@ -41,6 +42,7 @@ export const appConfig: ApplicationConfig = {
       },
       multi: true,
       deps: [OAuthService]
-    }
+    },
+    provideAnimations()
   ]
 };
