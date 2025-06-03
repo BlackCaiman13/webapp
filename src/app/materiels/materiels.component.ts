@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
@@ -15,6 +15,9 @@ import { StatusService } from '../Services/status.service';
 import { EmployeService } from '../Services/employe.service';
 import { Employe } from '../Models/employe.model';
 import { Status } from '../Models/status.model';
+import { Table } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 interface MaterielWithEmploye extends MaterielDTO {
   employe_: Employe | null;
@@ -32,12 +35,16 @@ interface MaterielWithEmploye extends MaterielDTO {
     FormsModule,
     ToastModule,
     ToolbarModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    TooltipModule,
+    ProgressSpinnerModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './materiels.component.html'
 })
 export class MaterielsComponent implements OnInit {
+  @ViewChild('dt') table!: Table;
+
   materiels: MaterielWithEmploye[] = [];
   selectedMateriel: MaterielDTO | null = null;
   displayAttribuerDialog = false;
@@ -46,6 +53,7 @@ export class MaterielsComponent implements OnInit {
   statuts: Status[] = [];
   selectedEmploye: Employe | null = null;
   selectedStatus: Status | null = null;
+  loading: boolean = true;
 
   constructor(
     private messageService: MessageService,
@@ -56,16 +64,22 @@ export class MaterielsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Charger d'abord les employés avant les matériels
-    this.loadEmployes();
-    this.loadStatus();
+    this.loading = true;
+    // Charger les données initiales
+    Promise.all([
+      this.loadEmployes(),
+      this.loadStatus()
+    ]).then(() => {
+      this.loadMateriels();
+    });
   }
 
   loadMateriels() {
+    this.loading = true;
     this.materielService.getAll().subscribe({
       next: (materiels) => {
         this.materiels = this.mapToModel(materiels);
-        console.log("Materiels after mapping:", this.materiels);
+        this.loading = false;
       },
       error: () => {
         this.messageService.add({
@@ -73,27 +87,27 @@ export class MaterielsComponent implements OnInit {
           summary: 'Erreur',
           detail: 'Erreur lors du chargement des matériels'
         });
+        this.loading = false;
       }
     });
-
-    
-
   }
 
   loadEmployes() {
-    this.employeService.getAll().subscribe({
-      next: (employes) => {
-        this.employes = employes;
-        // Charger les matériels une fois que les employés sont chargés
-        this.loadMateriels();
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Erreur lors du chargement des employés'
-        });
-      }
+    return new Promise<void>((resolve) => {
+      this.employeService.getAll().subscribe({
+        next: (employes) => {
+          this.employes = employes;
+          resolve();
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Erreur lors du chargement des employés'
+          });
+          resolve();
+        }
+      });
     });
   }
 
@@ -119,17 +133,21 @@ export class MaterielsComponent implements OnInit {
 
 
   loadStatus() {
-    this.statusService.getAll().subscribe({
-      next: (statuts: Status[]) => {
-        this.statuts = statuts;
-      },
-      error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Erreur lors du chargement des statuts'
-        });
-      }
+    return new Promise<void>((resolve) => {
+      this.statusService.getAll().subscribe({
+        next: (statuts: Status[]) => {
+          this.statuts = statuts;
+          resolve();
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Erreur lors du chargement des statuts'
+          });
+          resolve();
+        }
+      });
     });
   }
 
@@ -262,6 +280,38 @@ export class MaterielsComponent implements OnInit {
     });
   }
 
+  toggleStatus(materiel: MaterielDTO) {
+    const newStatusId = materiel.status === 2 ? 1 : 2; // 2 = en panne, 1 = en service
+    const action = materiel.status === 2 ? 'remettre en service' : 'mettre en panne';
+
+    this.confirmationService.confirm({
+      message: `Voulez-vous vraiment ${action} le matériel "${materiel.nature} - ${materiel.model}" ?`,
+      header: 'Confirmation du changement de statut',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.materielService.changerEtat(materiel.id!, newStatusId).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Succès',
+              detail: `Matériel ${action} avec succès`,
+              life: 3000
+            });
+            this.loadMateriels();
+          },
+          error: (error) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreur',
+              detail: error.error?.message || 'Erreur lors du changement de statut',
+              life: 3000
+            });
+          }
+        });
+      }
+    });
+  }
+
   getStatusClass(status: number): string {
     switch (status) {
       case 0:
@@ -273,5 +323,14 @@ export class MaterielsComponent implements OnInit {
       default:
         return '';
     }
+  }
+
+  onGlobalFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.table.filterGlobal(filterValue, 'contains');
+  }
+
+  clear(table: Table) {
+    table.clear();
   }
 }

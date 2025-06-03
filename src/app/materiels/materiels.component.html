@@ -2,18 +2,60 @@
 <p-confirmDialog [style]="{width: '450px'}" acceptLabel="Oui" rejectLabel="Non"></p-confirmDialog>
 
 <div class="card">
-    <p-table [value]="materiels" [tableStyle]="{'min-width': '60rem'}"
-        [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+    <div *ngIf="loading" class="flex justify-content-center">
+        <p-progressSpinner strokeWidth="4" [style]="{width: '50px', height: '50px'}"></p-progressSpinner>
+    </div>
+    <h2>Matériels</h2>
+    <!-- Barre de recherche globale -->
+    <div class="flex justify-content-end mb-3">
+        <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Rechercher..." class="p-inputtext"/>
+        </span>
+    </div>
+
+    <p-table #dt
+        [loading]="loading"
+        [value]="materiels" 
+        [tableStyle]="{'min-width': '60rem'}"
+        [paginator]="true" 
+        [rows]="10" 
+        [showCurrentPageReport]="true"
         [rowsPerPageOptions]="[10,25,50]"
+        [globalFilterFields]="['nature', 'model', 'employe_.nomEmploye', 'employe_.prenomEmploye']"
         dataKey="id"
+        [filterDelay]="0"
         currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} matériels">
         
         <ng-template pTemplate="header">
             <tr>
-                <th>Nature</th>
-                <th>Modèle</th>
-                <th>Statut</th>
-                <th>Employé</th>
+                <th pSortableColumn="nature">
+                    Nature 
+                    <p-sortIcon field="nature"></p-sortIcon>
+                    <p-columnFilter type="text" field="nature" display="menu"></p-columnFilter>
+                </th>
+                <th pSortableColumn="model">
+                    Modèle 
+                    <p-sortIcon field="model"></p-sortIcon>
+                    <p-columnFilter type="text" field="model" display="menu"></p-columnFilter>
+                </th>
+                <th pSortableColumn="status">
+                    Statut 
+                    <p-sortIcon field="status"></p-sortIcon>
+                    <p-columnFilter field="status" display="menu" [showMatchModes]="false"
+                        [showOperator]="false" [showAddButton]="false">
+                        <ng-template pTemplate="filter" let-status let-filter="filterCallback">
+                            <p-dropdown  optionValue="libelleStatus"  [ngModel]="status" [options]="statuts" optionLabel="libelleStatus" (onChange)="filter($event.value)" placeholder="Sélectionner un statut"
+                            styleClass="p-column-filter">
+                            </p-dropdown>
+                        </ng-template>
+                    </p-columnFilter>
+                </th>
+                <th pSortableColumn="employe_.nomEmploye">
+                    Employé
+                    <p-sortIcon field="employe_.nomEmploye"></p-sortIcon>
+                    <p-columnFilter type="text" field="employe_.nomEmploye" display="menu"></p-columnFilter>
+                </th>
                 <th>Actions</th>
             </tr>
         </ng-template>
@@ -42,10 +84,12 @@
                                 (click)="revoquerAttribution(materiel)"
                                 [disabled]="!materiel.employe"
                                 pTooltip="Révoquer l'attribution"></button>
-                        <button pButton pRipple icon="pi pi-sync" 
-                                class="p-button-rounded p-button-info" 
-                                (click)="showChangerStatusDialog(materiel)"
-                                pTooltip="Changer le statut"></button>
+                        <button pButton pRipple 
+                                [icon]="materiel.status === 2 ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'" 
+                                [class]="'p-button-rounded ' + (materiel.status === 2 ? 'p-button-success' : 'p-button-danger')" 
+                                (click)="toggleStatus(materiel)"
+                                [pTooltip]="materiel.status === 2 ? 'Remettre en service' : 'Mettre en panne'">
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -83,27 +127,6 @@
     <ng-template pTemplate="footer">
         <button pButton pRipple label="Annuler" icon="pi pi-times" class="p-button-text" (click)="displayAttribuerDialog = false"></button>
         <button pButton pRipple label="Attribuer" icon="pi pi-check" class="p-button-text" (click)="confirmerAttribution()" [disabled]="!selectedEmploye"></button>
-    </ng-template>
-</p-dialog>
-
-<!-- Dialog Changement Status -->
-<p-dialog [(visible)]="displayChangerStatusDialog" 
-          [style]="{width: '450px', height: '400px'}" 
-          header="Changer le statut" 
-          [modal]="true">
-    <div class="flex flex-column gap-2">
-        <label for="status">Sélectionner un nouveau statut</label>
-        <p-dropdown [options]="statuts" 
-                   [(ngModel)]="selectedStatus"
-                   optionLabel="libelleStatus"
-                   placeholder="Choisir un statut"
-                   [showClear]="true"
-                   styleClass="w-full">
-        </p-dropdown>
-    </div>
-    <ng-template pTemplate="footer">
-        <button pButton pRipple label="Annuler" icon="pi pi-times" class="p-button-text" (click)="displayChangerStatusDialog = false"></button>
-        <button pButton pRipple label="Changer" icon="pi pi-check" class="p-button-text" (click)="confirmerChangementStatus()" [disabled]="!selectedStatus"></button>
     </ng-template>
 </p-dialog>
 

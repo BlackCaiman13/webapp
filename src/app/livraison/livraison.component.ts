@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TableModule } from 'primeng/table';
+import { TableModule, Table } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -22,6 +22,8 @@ import { MaterielDTO } from '../Dtos/materiel.dto';
 import { ConstructeurService } from '../Services/constructeur.service';
 import { FournisseurService } from '../Services/fournisseur.service';
 import { LocalDateTime, convert, Instant, ZoneId } from '@js-joda/core';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+
 
 @Component({
   selector: 'app-livraison',
@@ -38,12 +40,16 @@ import { LocalDateTime, convert, Instant, ZoneId } from '@js-joda/core';
     DropdownModule,
     ToolbarModule,
     ConfirmDialogModule,
-    InputTextModule
+    InputTextModule,
+    ProgressSpinnerModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './livraison.component.html'
 })
 export class LivraisonComponent implements OnInit {
+  @ViewChild('dt') dt!: Table;
+
+  loading: boolean = true;
   livraisons: LivraisonDTO[] = [];
   selectedLivraisons: LivraisonDTO[] = [];
   livraisonDialog = false;
@@ -87,26 +93,98 @@ export class LivraisonComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.getLivraisons();
-    this.loadTypes();
-    this.materielService.getAll().subscribe(data => this.materiels = data);
-    this.constructeurService.getAll().subscribe(data => this.constructeurs = data);
-    this.fournisseurService.getAll().subscribe(data => this.fournisseurs = data);
-  }
-
-
-  loadTypes() {
-    this.typeService.getAll().subscribe({
-      next: (types) => this.types = types,
-      error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Erreur lors du chargement des types'
-        });
-      }
+    this.loading = true;
+    // Charger toutes les données nécessaires en parallèle
+    Promise.all([
+      this.loadTypes(),
+      this.loadMateriels(),
+      this.loadConstructeurs(),
+      this.loadFournisseurs()
+    ]).then(() => {
+      this.getLivraisons();
     });
   }
+
+  loadMateriels(): Promise<void> {
+    return new Promise((resolve) => {
+      this.materielService.getAll().subscribe({
+        next: (data) => {
+          this.materiels = data;
+          resolve();
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Erreur lors du chargement des matériels'
+          });
+          resolve();
+        }
+      });
+    });
+  }
+
+  loadConstructeurs(): Promise<void> {
+    return new Promise((resolve) => {
+      this.constructeurService.getAll().subscribe({
+        next: (data) => {
+          this.constructeurs = data;
+          resolve();
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Erreur lors du chargement des constructeurs'
+          });
+          resolve();
+        }
+      });
+    });
+  }
+
+  loadFournisseurs(): Promise<void> {
+    return new Promise((resolve) => {
+      this.fournisseurService.getAll().subscribe({
+        next: (data) => {
+          this.fournisseurs = data;
+          resolve();
+        },
+        error: () => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Erreur lors du chargement des fournisseurs'
+          });
+          resolve();
+        }
+      });
+    });
+  }
+
+
+  loadTypes(): Promise<void> {
+    return new Promise((resolve) => {
+      this.typeService.getAll().subscribe({
+        next: (types) => {
+          this.types = types;
+          resolve();
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Erreur lors du chargement des types'
+          });
+          resolve();
+        }
+      });
+    });
+  }
+
+
+
+
 
   showDetails(livraison: LivraisonDTO): void {
     this.selectedLivraison = livraison;
@@ -137,7 +215,21 @@ export class LivraisonComponent implements OnInit {
   }
 
   getLivraisons() {
-    this.livraisonService.getAllLivraisons().subscribe(data => this.livraisons = data);
+    this.loading = true;
+    this.livraisonService.getAllLivraisons().subscribe({
+      next: (data) => {
+        this.livraisons = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Erreur lors du chargement des livraisons'
+        });
+        this.loading = false;
+      }
+    });
   }
 
   showNewMaterielDialog() {
@@ -226,12 +318,33 @@ export class LivraisonComponent implements OnInit {
       this.livraisonService.createLivraisonAvecMateriels(
         { dateHeure: dateToSend },
         this.newLivraison.materiels
-      ).subscribe(() => {
-        this.getLivraisons();
-        this.livraisonDialog = false;
-        this.displayDialog = false;
-        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Livraison créée', life: 3000 });
-        this.ngOnInit();
+      ).subscribe({
+        next: () => {
+          Promise.all([
+            this.loadMateriels(),
+            this.loadTypes(),
+            this.loadConstructeurs(),
+            this.loadFournisseurs()
+          ]).then(() => {
+            this.getLivraisons();
+            this.livraisonDialog = false;
+            this.displayDialog = false;
+            this.messageService.add({ 
+              severity: 'success', 
+              summary: 'Succès', 
+              detail: 'Livraison créée', 
+              life: 3000 
+            });
+          });
+        },
+        error: (error) => {
+          this.messageService.add({ 
+            severity: 'error', 
+            summary: 'Erreur', 
+            detail: 'Erreur lors de la création de la livraison', 
+            life: 3000 
+          });
+        }
       });
     }
   }
@@ -246,12 +359,19 @@ export class LivraisonComponent implements OnInit {
       accept: () => {
         this.livraisonService.deleteLivraison(livraison.id!).subscribe({
           next: () => {
-            this.getLivraisons();
-            this.messageService.add({ 
-              severity: 'success', 
-              summary: 'Succès', 
-              detail: 'Livraison supprimée', 
-              life: 3000 
+            Promise.all([
+              this.loadMateriels(),
+              this.loadTypes(),
+              this.loadConstructeurs(),
+              this.loadFournisseurs()
+            ]).then(() => {
+              this.getLivraisons();
+              this.messageService.add({ 
+                severity: 'success', 
+                summary: 'Succès', 
+                detail: 'Livraison supprimée', 
+                life: 3000 
+              });
             });
           },
           error: (error) => {
@@ -301,6 +421,11 @@ export class LivraisonComponent implements OnInit {
   private getLocalDateTime(): Date {
     const localDateTime = LocalDateTime.now();
     return convert(localDateTime).toDate();
+  }
+
+  onGlobalFilter(event: Event) {
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dt.filterGlobal(filterValue, 'contains');
   }
 }
 

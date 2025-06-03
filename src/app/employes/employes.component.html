@@ -1,0 +1,159 @@
+<p-toast></p-toast>
+<p-confirmDialog [style]="{width: '450px'}" acceptLabel="Oui" rejectLabel="Non"></p-confirmDialog>
+
+<div class="card">
+    <div *ngIf="loading" class="flex justify-content-center">
+        <p-progressSpinner strokeWidth="4" [style]="{width: '50px', height: '50px'}"></p-progressSpinner>
+    </div>
+
+    <div class="flex justify-content-between align-items-center mb-3">
+        <h2>Employés</h2>
+        <div class="flex gap-2">
+            <!-- Barre de recherche globale -->
+            <span class="p-input-icon-left">
+                <i class="pi pi-search"></i>
+                <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Rechercher..." class="p-inputtext"/>
+            </span>
+            <button pButton pRipple label="Nouvel Employé" icon="pi pi-plus" class="p-button-success" (click)="openNew()"></button>
+        </div>
+    </div>
+
+    <p-table #dt
+        [value]="employes"
+        [loading]="loading"
+        [tableStyle]="{'min-width': '60rem'}"
+        [paginator]="true"
+        [rows]="10"
+        [showCurrentPageReport]="true"
+        [rowsPerPageOptions]="[10,25,50]"
+        [globalFilterFields]="['nomEmploye', 'prenomEmploye']"
+        dataKey="id"
+        [filterDelay]="0"
+        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} employés">
+        
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="nomEmploye">
+                    Nom
+                    <p-sortIcon field="nomEmploye"></p-sortIcon>
+                    <p-columnFilter type="text" field="nomEmploye" display="menu"></p-columnFilter>
+                </th>
+                <th pSortableColumn="prenomEmploye">
+                    Prénom
+                    <p-sortIcon field="prenomEmploye"></p-sortIcon>
+                    <p-columnFilter type="text" field="prenomEmploye" display="menu"></p-columnFilter>
+                </th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-employe>
+            <tr>
+                <td>{{employe.nomEmploye}}</td>
+                <td>{{employe.prenomEmploye}}</td>
+                <td>
+                    <div class="flex gap-2">
+                        <button pButton pRipple icon="pi pi-pencil"
+                                class="p-button-rounded p-button-success"
+                                (click)="editEmploye(employe)"
+                                pTooltip="Modifier"></button>
+                        <button pButton pRipple icon="pi pi-trash"
+                                class="p-button-rounded p-button-danger"
+                                (click)="deleteEmploye(employe)"
+                                pTooltip="Supprimer"></button>
+                        <button pButton pRipple icon="pi pi-list"
+                                class="p-button-rounded p-button-info"
+                                (click)="showMateriels(employe)"
+                                pTooltip="Voir les matériels"></button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Dialog Création/Modification Employé -->
+<p-dialog [(visible)]="employeDialog"
+          [style]="{width: '450px'}"
+          [header]="isEditMode ? 'Modifier l\'employé' : 'Nouvel employé'"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false">
+    <div class="flex flex-column gap-3">
+        <div class="field">
+            <label for="nom">Nom</label>
+            <input type="text" pInputText id="nom" [(ngModel)]="newEmploye.nomEmploye" required autofocus class="w-full"/>
+        </div>
+        <div class="field">
+            <label for="prenom">Prénom</label>
+            <input type="text" pInputText id="prenom" [(ngModel)]="newEmploye.prenomEmploye" required class="w-full"/>
+        </div>
+    </div>
+    
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Annuler" icon="pi pi-times" class="p-button-text" (click)="employeDialog = false"></button>
+        <button pButton pRipple [label]="isEditMode ? 'Modifier' : 'Créer'" icon="pi pi-check" class="p-button-text" 
+                (click)="saveEmploye()"
+                [disabled]="!newEmploye.nomEmploye || !newEmploye.prenomEmploye"></button>
+    </ng-template>
+</p-dialog>
+
+<!-- Dialog Liste des Matériels -->
+<p-dialog [(visible)]="displayMaterielsDialog"
+          [style]="{width: '70vw'}"
+          [header]="'Matériels de ' + (selectedEmploye?.nomEmploye || '') + ' ' + (selectedEmploye?.prenomEmploye || '')"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false">
+    
+    <p-table [value]="employeMateriels" [tableStyle]="{'min-width': '50rem'}">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Nature</th>
+                <th>Modèle</th>
+                <th>Statut</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-materiel>
+            <tr>
+                <td>{{materiel.nature}}</td>
+                <td>{{materiel.model}}</td>
+                <td>
+                    <span [class]="'status-badge ' + (materiel.status === 0 ? 'status-neuf' : 
+                                                     materiel.status === 1 ? 'status-en-service' : 
+                                                     'status-en-panne')">
+                        {{materiel.status === 0 ? 'Neuf' : 
+                          materiel.status === 1 ? 'En service' : 
+                          materiel.status === 2 ? 'En panne' : 
+                          'Neuf'}}
+                    </span>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="3" class="text-center p-4">Aucun matériel attribué à cet employé</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>
+
+<style>
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.status-neuf {
+    background-color: #C8E6C9;
+    color: #256029;
+}
+.status-en-service {
+    background-color: #FEEDAF;
+    color: #8A5340;
+}
+.status-en-panne {
+    background-color: #FFCDD2;
+    color: #C63737;
+}
+</style>

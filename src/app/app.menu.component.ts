@@ -26,9 +26,10 @@ export class AppMenuComponent implements OnInit {
                     label: 'Home',
                     items: [
                         { label: 'Tableau de board', icon: 'pi pi-fw pi-home', routerLink: ['/home'] },
-                        { label: 'Livraisons', icon: 'pi pi-fw pi-check-square', routerLink: ['/livraison'] },
-                        { label: 'Materiels', icon: 'pi pi-fw pi-user', routerLink: ['/materiels'] },
-                        { label: 'Employes', icon: 'pi pi-fw pi-envelope', routerLink: ['/employes'] },
+                        { label: 'Livraisons', icon: 'pi pi-fw pi-box', routerLink: ['/livraison'] },
+                        { label: 'Materiels', icon: 'pi pi-fw pi-wrench', routerLink: ['/materiels'] },
+                        { label: 'Employes', icon: 'pi pi-fw pi-user', routerLink: ['/employes'] },
+                        { label: 'Fournisseur', icon: 'pi pi-fw pi-truck', routerLink: ['/fournisseurs'] },
                         
                         
     
@@ -45,24 +46,9 @@ export class AppMenuComponent implements OnInit {
                     label: 'Home',
                     items: [
                         { label: 'Tableau de board', icon: 'pi pi-fw pi-home', routerLink: ['/home'] },
-                        { label: 'Permission', icon: 'pi pi-fw pi-check-square', routerLink: ['/livraison'] },
-                        { label: 'Calendrier Direction', icon: 'pi pi-fw pi-user', routerLink: ['/calendrierdirection'] },
+                        { label: 'Fournisseur', icon: 'pi pi-fw pi-warehouse', routerLink: ['/fournisseurs'] },
                         
                         
-    
-                    ]
-                },
-    
-                
-            ];
-        }else if (this.authService.isEmploye()){
-            this.model = [
-                {
-                    label: 'Home',
-                    items: [
-                        { label: 'Tableau de board', icon: 'pi pi-fw pi-home', routerLink: ['/home'] },
-                        { label: 'Mon Materiel', icon: 'pi pi-fw pi-check-square', routerLink: ['/permission'] },
-                        { label: 'Mon Profile', icon: 'pi pi-fw pi-envelope', routerLink: ['/madirection'] },
     
                     ]
                 },
@@ -75,9 +61,9 @@ export class AppMenuComponent implements OnInit {
                     label: 'Home',
                     items: [
                         { label: 'Tableau de board', icon: 'pi pi-fw pi-home', routerLink: ['/home'] },
-                        { label: 'Livraison', icon: 'pi pi-fw pi-check-square', routerLink: ['/livraison'] },
-                        { label: 'Calendrier Departement', icon: 'pi pi-fw pi-user', routerLink: ['/calendrierdepartement'] },
-                        { label: 'Mon Departement', icon: 'pi pi-fw pi-envelope', routerLink: ['/mondepartement'] },
+                        { label: 'Livraisons', icon: 'pi pi-fw pi-truck', routerLink: ['/livraison'] },
+                        { label: 'Materiels', icon: 'pi pi-fw pi-wrench', routerLink: ['/materiels'] },
+                        { label: 'Employes', icon: 'pi pi-fw pi-user', routerLink: ['/employes'] },
                         
                         
     

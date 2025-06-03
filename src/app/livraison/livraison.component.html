@@ -1,15 +1,43 @@
+<p-toast></p-toast>
+<p-confirmDialog [style]="{width: '450px'}" acceptLabel="Oui" rejectLabel="Non"></p-confirmDialog>
+
 <div class="card">
-    <p-toast></p-toast>
-    
-    <div class="flex justify-content-between mb-3">
-        <h2>Liste des Livraisons</h2>
-        <p-button label="Nouvelle Livraison" icon="pi pi-plus" (click)="showDialog()"></p-button>
+    <div *ngIf="loading" class="flex justify-content-center">
+        <p-progressSpinner strokeWidth="4" [style]="{width: '50px', height: '50px'}"></p-progressSpinner>
     </div>
 
-    <p-table [value]="livraisons" selectionMode="multiple" [(selection)]="selectedLivraisons" [rows]="10" [paginator]="true" responsiveLayout="scroll">
+    <div class="flex justify-content-between align-items-center mb-3">
+        <h2>Livraisons</h2>
+        <div class="flex gap-2">
+            <span class="p-input-icon-left">
+                <i class="pi pi-search"></i>
+                <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Rechercher..." class="p-inputtext"/>
+            </span>
+            <p-button label="Nouvelle Livraison" icon="pi pi-plus" (click)="showDialog()"></p-button>
+        </div>
+    </div>
+
+    <p-table #dt
+        [value]="livraisons" 
+        [loading]="loading"
+        [tableStyle]="{'min-width': '60rem'}"
+        [paginator]="true" 
+        [rows]="10" 
+        [showCurrentPageReport]="true"
+        [rowsPerPageOptions]="[10,25,50]"
+        [globalFilterFields]="['dateHeure', 'materiels']"
+        dataKey="id"
+        [filterDelay]="0"
+        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} livraisons"
+        selectionMode="multiple" 
+        [(selection)]="selectedLivraisons">
         <ng-template pTemplate="header">
             <tr>
-                <th>Date</th>
+                <th pSortableColumn="dateHeure">
+                    Date 
+                    <p-sortIcon field="dateHeure"></p-sortIcon>
+                    <p-columnFilter type="date" field="dateHeure" display="menu"></p-columnFilter>
+                </th>
                 <th>Matériels</th>
                 <th>Actions</th>
             </tr>
@@ -33,36 +61,43 @@
     </p-table>
 
     <p-dialog header="Nouvelle Livraison" [(visible)]="displayDialog" 
-              [style]="{width: '70vw', height: '80vh'}" [modal]="true">
+              [style]="{width: '70vw'}" [modal]="true" [draggable]="false" [resizable]="false">
         <div class="grid p-fluid">
             <div class="col-12 mb-3">
-                <label class="block mb-2">Date de livraison</label>
+                <label class="block mb-2 font-bold">Date de livraison</label>
                 <p-calendar [(ngModel)]="newLivraison.dateHeure" 
                            [showIcon]="true" 
                            [showTime]="true" 
                            dateFormat="dd/mm/yy"
                            hourFormat="24"
                            placeholder="Sélectionnez une date et une heure"
-                           >
+                           [showButtonBar]="true"
+                           [showSeconds]="false"
+                           class="w-full">
                 </p-calendar>
             </div>
             
             <div class="col-12">
                 <div class="flex justify-content-between align-items-center mb-3">
-                    <h3>Matériels à livrer</h3>
+                    <h3 class="m-0">Matériels à livrer</h3>
                     <p-button label="Ajouter un matériel" 
                              icon="pi pi-plus" 
-                             (click)="showNewMaterielDialog()">
+                             (click)="showNewMaterielDialog()"
+                             styleClass="p-button-success">
                     </p-button>
                 </div>
                 
-                <p-table [value]="newLivraison.materiels" styleClass="p-datatable-sm">
+                <p-table [value]="newLivraison.materiels" 
+                         styleClass="p-datatable-sm"
+                         [tableStyle]="{'min-width': '50rem'}"
+                         [scrollable]="true" 
+                         scrollHeight="200px">
                     <ng-template pTemplate="header">
                         <tr>
-                            <th>Nature</th>
-                            <th>Modèle</th>
-                            <th>Type</th>
-                            <th>Actions</th>
+                            <th pSortableColumn="nature">Nature <p-sortIcon field="nature"></p-sortIcon></th>
+                            <th pSortableColumn="model">Modèle <p-sortIcon field="model"></p-sortIcon></th>
+                            <th pSortableColumn="type.libelleType">Type <p-sortIcon field="type.libelleType"></p-sortIcon></th>
+                            <th style="width: 100px">Actions</th>
                         </tr>
                     </ng-template>
                     <ng-template pTemplate="body" let-materiel let-i="index">
@@ -101,92 +136,117 @@
 
     <!-- Dialog pour ajouter un nouveau matériel -->
     <p-dialog header="Nouveau Matériel" [(visible)]="displayMaterielDialog" 
-              [style]="{width: '60vw', height: '60vh'}" [modal]="true">
+              [style]="{width: '60vw'}" [modal]="true" [draggable]="false" [resizable]="false">
         <div class="grid p-fluid">
-            
             <div class="col-12 mb-3">
-                <label class="block mb-2">Constructeur</label>
+                <label class="block mb-2 font-bold">Constructeur</label>
                 <p-dropdown [options]="constructeurs" [(ngModel)]="newMateriel.constructeur"
-                           optionLabel="nomConstructeur" placeholder="Sélectionnez un constructeur">
+                           optionLabel="nomConstructeur" placeholder="Sélectionnez un constructeur"
+                           [showClear]="true" class="w-full">
                 </p-dropdown>
             </div>
             <div class="col-12 mb-3">
-                <label class="block mb-2">Fournisseur</label>
+                <label class="block mb-2 font-bold">Fournisseur</label>
                 <p-dropdown [options]="fournisseurs" [(ngModel)]="newMateriel.fournisseur"
-                           optionLabel="nomFournisseur" placeholder="Sélectionnez un fournisseur">
+                           optionLabel="nomFournisseur" placeholder="Sélectionnez un fournisseur"
+                           [showClear]="true" class="w-full">
                 </p-dropdown>
             </div>
 
-            
             <div class="col-12 mb-3">
-                <label class="block mb-2">Type</label>
+                <label class="block mb-2 font-bold">Type</label>
                 <p-dropdown [options]="types" [(ngModel)]="newMateriel.type"
-                           optionLabel="libelleType" placeholder="Sélectionnez un type">
+                           optionLabel="libelleType" placeholder="Sélectionnez un type"
+                           [showClear]="true" class="w-full">
                 </p-dropdown>
             </div>
+
             <div class="col-12 mb-3">
-                <label class="block mb-2">Nature</label>
-                <input pInputText [(ngModel)]="newMateriel.nature" />
+                <label class="block mb-2 font-bold">Nature</label>
+                <input pInputText [(ngModel)]="newMateriel.nature" class="w-full"
+                       placeholder="Entrez la nature du matériel"/>
             </div>
             
             <div class="col-12 mb-3">
-                <label class="block mb-2">Modèle</label>
-                <input pInputText  [(ngModel)] ="newMateriel.model" />
+                <label class="block mb-2 font-bold">Modèle</label>
+                <input pInputText [(ngModel)]="newMateriel.model" class="w-full"
+                       placeholder="Entrez le modèle du matériel"/>
             </div>
         </div>
 
         <ng-template pTemplate="footer">
-            <p-button label="Annuler" icon="pi pi-times"
-                     (click)="displayMaterielDialog=false"
-                     styleClass="p-button-text">
-            </p-button>
-            <p-button label="Ajouter" icon="pi pi-plus" 
-                     (click)="addMateriel()"
-                     [disabled]="!isNewMaterielValid()">
-            </p-button>
+            <div class="flex justify-content-end gap-2">
+                <p-button label="Annuler" icon="pi pi-times"
+                         (click)="displayMaterielDialog=false"
+                         styleClass="p-button-text">
+                </p-button>
+                <p-button label="Ajouter" icon="pi pi-plus" 
+                         (click)="addMateriel()"
+                         [disabled]="!isNewMaterielValid()">
+                </p-button>
+            </div>
         </ng-template>
     </p-dialog>
 
     
-    <p-dialog [(visible)]="displayDetailsDialog" [modal]="true" [style]="{width: '70vw'}" header="Détail Livraison">
+    <p-dialog [(visible)]="displayDetailsDialog" [modal]="true" [style]="{width: '80vw'}" 
+              header="Détail Livraison" [draggable]="false" [resizable]="false">
         <div class="grid">
             <div class="col-12 md:col-6">
-                <div class="field">
-                    <h3>Informations Générales</h3>
+                <div class="surface-card p-4 border-round">
+                    <h3 class="mb-4">Informations Générales</h3>
                     <div class="p-field mb-3">
-                        <label class="font-bold block mb-2">Date de livraison</label>
-                        <div>{{ livraison.dateHeure | date:"dd/MM/yyyy HH:mm" }}</div>
+                        <label class="font-bold block mb-2 text-lg">Date de livraison</label>
+                        <div class="text-xl">{{ selectedLivraison?.dateHeure| date:"dd/MM/yyyy HH:mm" }}</div>
                     </div>
                 </div>
             </div>
             
             <div class="col-12">
-                <h3>Liste des Matériels</h3>
-                <p-table [value]="selectedMateriels" styleClass="p-datatable-sm">
-                    <ng-template pTemplate="header">
-                        <tr>
-                            <th>Nature</th>
-                            <th>Modèle</th>
-                            <th>Type</th>
-                            <th>Constructeur</th>
-                            <th>Fournisseur</th>
-                        </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-materiel>
-                        <tr>
-                            <td>{{materiel.nature}}</td>
-                            <td>{{materiel.model}}</td>
-                            <td>{{materiel.type?.libelleType || 'Non spécifié'}}</td>
-                            <td>{{materiel.constructeur?.nomConstructeur || 'Non spécifié'}}</td>
-                            <td>{{materiel.fournisseur?.nomFournisseur || 'Non spécifié'}}</td>
-                        </tr>
-                    </ng-template>
-                </p-table>
+                <div class="surface-card p-4 border-round">
+                    <h3 class="mb-4">Liste des Matériels</h3>
+                    <p-table [value]="selectedMateriels" 
+                            styleClass="p-datatable-sm"
+                            [tableStyle]="{'min-width': '50rem'}"
+                            [scrollable]="true" 
+                            scrollHeight="400px"
+                            [paginator]="true"
+                            [rows]="10"
+                            [showCurrentPageReport]="true"
+                            currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} matériels"
+                            [rowsPerPageOptions]="[10,25,50]">
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th pSortableColumn="nature">Nature <p-sortIcon field="nature"></p-sortIcon></th>
+                                <th pSortableColumn="model">Modèle <p-sortIcon field="model"></p-sortIcon></th>
+                                <th pSortableColumn="type.libelleType">Type <p-sortIcon field="type.libelleType"></p-sortIcon></th>
+                                <th pSortableColumn="constructeur.nomConstructeur">Constructeur <p-sortIcon field="constructeur.nomConstructeur"></p-sortIcon></th>
+                                <th pSortableColumn="fournisseur.nomFournisseur">Fournisseur <p-sortIcon field="fournisseur.nomFournisseur"></p-sortIcon></th>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="body" let-materiel>
+                            <tr>
+                                <td>{{materiel.nature}}</td>
+                                <td>{{materiel.model}}</td>
+                                <td>{{materiel.type?.libelleType || 'Non spécifié'}}</td>
+                                <td>{{materiel.constructeur?.nomConstructeur || 'Non spécifié'}}</td>
+                                <td>{{materiel.fournisseur?.nomFournisseur || 'Non spécifié'}}</td>
+                            </tr>
+                        </ng-template>
+                        <ng-template pTemplate="emptymessage">
+                            <tr>
+                                <td colspan="5" class="text-center p-4">Aucun matériel dans cette livraison</td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
             </div>
         </div>
         
         <ng-template pTemplate="footer">
-            <button pButton label="Fermer" class="p-button-secondary" (click)="hideDialog()" type="button"></button>
+            <div class="flex justify-content-end">
+                <p-button label="Fermer" icon="pi pi-times" styleClass="p-button-secondary" (click)="hideDialog()"></p-button>
+            </div>
         </ng-template>
     </p-dialog>
 
