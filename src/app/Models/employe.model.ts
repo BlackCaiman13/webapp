@@ -1,8 +1,8 @@
 export interface Employe {
-    id?: number;
+    id: number;
     nomEmploye: string;
     prenomEmploye: string;
-    etat: number;
+    etat?: number;
     materiels?: number[];
     dateCreated?: string;
     lastUpdated?: string;

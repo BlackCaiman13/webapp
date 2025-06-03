@@ -7,4 +7,5 @@ export interface Fournisseur {
     livraisons?: number[];
     dateCreated?: string;
     lastUpdated?: string;
+    rendement?: number;
 }

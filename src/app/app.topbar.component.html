@@ -2,7 +2,7 @@
     <a class="layout-topbar-logo" routerLink="/home">
        
        
-        <span>Permission</span>
+        <span>E-mat</span>
     </a>
 
     <button #menubutton class="p-link layout-menu-button layout-topbar-button" (click)="layoutService.onMenuToggle()">
@@ -13,11 +13,19 @@
         <i class="pi pi-ellipsis-v"></i>
     </button>
 
+    
+
     <div #topbarmenu class="layout-topbar-menu"  [class.layout-topbar-menu-mobile-active]="layoutService.state.profileSidebarVisible">
-        <button class="p-link layout-topbar-button" (click)="authService.logOut()">
-            <i class="pi pi-user"></i>
-            <span>Profile</span>
-        </button>
+         <div class="flex align-items-center gap-2">
+             <span class="p-link">{{authService.getUserFullName() + " (" + authService.getLastRole() + ")"}}</span>
+             <p-avatar image="https://www.gravatar.com/avatar/05dfd4b41340d09cae045235eb0893c3?d=mp" class="p-link" shape="circle" (click)="authService.logout()" />
+         </div>
+
+       
         
+
+        
+    
+       
     </div>
 </div>

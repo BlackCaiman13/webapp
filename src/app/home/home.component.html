@@ -1,62 +1,93 @@
 <div class="grid">
-  <div class="col-12 lg:col-6 xl:col-3">
+  <div class="col-12 lg:col-6 xl:col-4">
     <div class="card mb-0">
         <div class="flex justify-content-between mb-3">
             <div>
-                <span class="block text-500 font-medium mb-3">En Attente</span>
+                <span class="block text-500 font-medium mb-3">En panne</span>
                 <div class="text-900 font-medium text-xl">152</div>
             </div>
-            <div class="flex align-items-center justify-content-center bg-blue-100 border-round" [ngStyle]="{width: '2.5rem', height: '2.5rem'}">
-                <i class="pi pi-shopping-cart text-blue-500 text-xl"></i>
+            <div class="flex align-items-center justify-content-center bg-blue-100 border-round" [ngStyle]="{width: '3.5rem', height: '3.5rem'}">
+                <i class="pi pi-wrench text-blue-500 " style="font-size: 2.3rem"></i>
             </div>
         </div>
-        <span class="text-green-500 font-medium">24 new </span>
-        <span class="text-500">since last visit</span>
+        
     </div>
 </div>
-<div class="col-12 lg:col-6 xl:col-3">
+<div class="col-12 lg:col-6 xl:col-4">
     <div class="card mb-0">
         <div class="flex justify-content-between mb-3">
             <div>
-                <span class="block text-500 font-medium mb-3">Validé</span>
-                <div class="text-900 font-medium text-xl">$2.100</div>
+                <span class="block text-500 font-medium mb-3">Neuf</span>
+                <div class="text-900 font-medium text-xl">2100</div>
             </div>
-            <div class="flex align-items-center justify-content-center bg-orange-100 border-round" [ngStyle]="{width: '2.5rem', height: '2.5rem'}">
-                <i class="pi pi-map-marker text-orange-500 text-xl"></i>
+            <div class="flex align-items-center justify-content-center bg-orange-100 border-round" [ngStyle]="{width: '3.5rem', height: '3.5rem'}">
+                <i class="pi pi-check-circle text-orange-500 " style="font-size: 2.3rem"></i>
             </div>
         </div>
-        <span class="text-green-500 font-medium">%52+ </span>
-        <span class="text-500">since last week</span>
+        
     </div>
 </div>
-<div class="col-12 lg:col-6 xl:col-3">
+<div class="col-12 lg:col-6 xl:col-4">
     <div class="card mb-0">
         <div class="flex justify-content-between mb-3">
             <div>
-                <span class="block text-500 font-medium mb-3">Reporté</span>
+                <span class="block text-500 font-medium mb-3">Usagé</span>
                 <div class="text-900 font-medium text-xl">28441</div>
             </div>
-            <div class="flex align-items-center justify-content-center bg-cyan-100 border-round" [ngStyle]="{width: '2.5rem', height: '2.5rem'}">
-                <i class="pi pi-inbox text-cyan-500 text-xl"></i>
+            <div class="flex align-items-center justify-content-center bg-cyan-100 border-round" [ngStyle]="{width: '3.5rem', height: '3.5rem'}">
+                <i class="pi pi-tags text-cyan-500 " style="font-size: 2.3rem"></i>
             </div>
         </div>
-        <span class="text-green-500 font-medium">520  </span>
-        <span class="text-500">newly registered</span>
+       
     </div>
 </div>
-<div class="col-12 lg:col-6 xl:col-3">
-    <div class="card mb-0">
-        <div class="flex justify-content-between mb-3">
-            <div>
-                <span class="block text-500 font-medium mb-3">Rejeté</span>
-                <div class="text-900 font-medium text-xl">152 Unread</div>
-            </div>
-            <div class="flex align-items-center justify-content-center bg-purple-100 border-round" [ngStyle]="{width: '2.5rem', height: '2.5rem'}">
-                <i class="pi pi-comment text-purple-500 text-xl"></i>
-            </div>
-        </div>
-        <span class="text-green-500 font-medium">85 </span>
-        <span class="text-500">responded</span>
+
+<!-- Graphique en barres -->
+<div class="col-12 lg:col-8">
+    <div class="card">
+        <h5>Évolution des Matériels par Status</h5>
+        <p-chart type="bar" [data]="basicData" [options]="basicOptions"></p-chart>
+    </div>
+</div>
+
+<!-- Graphique circulaire -->
+<div class="col-12 lg:col-4">
+    <div class="card">
+        <h5>Répartition des Statuts</h5>
+        <p-chart type="pie" [data]="pieData" [options]="pieOptions"></p-chart>
+    </div>
+</div>
+
+<!-- Tableau des dernières activités -->
+<div class="col-12">
+    <div class="card">
+        <h5>Dernières Activités</h5>
+        <p-table [value]="materiels" [rows]="5" [paginator]="true" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>ID</th>
+                    <th>Matériel</th>
+                    <th>Status</th>
+                    
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-materiel>
+                <tr>
+                    <td>{{materiel.id}}</td>
+                    <td>{{materiel.model}}</td>
+                    <td>
+                        <p-tag [value]="materiel.status === 0 ? 'Neuf' : materiel.status === 1 ? 'Usagé' : materiel.status === 2 ? 'En Panne' : 'Neuf'" 
+                              [severity]="materiel.status === 0 ? 'warning' : 
+                                         materiel.status === 1 ? 'success' : 
+                                         materiel.status === 2 ? 'info' : 'danger'">
+                        </p-tag>
+                    </td>
+                    
+                </tr>
+            </ng-template>
+        </p-table>
     </div>
 </div>
 </div>
+
+

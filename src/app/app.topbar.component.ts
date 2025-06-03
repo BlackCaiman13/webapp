@@ -5,7 +5,8 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { MenuModule } from 'primeng/menu';
-import { OAuthService } from 'angular-oauth2-oidc';
+import { AuthService } from './Services/auth/auth.service';
+import {AvatarModule} from 'primeng/avatar';
 
 
 
@@ -13,7 +14,7 @@ import { OAuthService } from 'angular-oauth2-oidc';
     standalone: true,
     selector: 'app-topbar',
     templateUrl: './app.topbar.component.html',
-    imports: [RouterModule, FormsModule,  ToastModule,  MenuModule ],
+    imports: [RouterModule, FormsModule,  ToastModule,  MenuModule, AvatarModule], 
     providers: [MessageService]
 })
 export class AppTopBarComponent implements OnInit {
@@ -26,7 +27,7 @@ export class AppTopBarComponent implements OnInit {
 
     @ViewChild('topbarmenu') menu!: ElementRef;
 
-    constructor(public layoutService: LayoutService, public messageService: MessageService, public authService: OAuthService) { }
+    constructor(public layoutService: LayoutService, public messageService: MessageService, public authService: AuthService) { }
 
     ngOnInit() {
         this.items = [
@@ -74,5 +75,9 @@ export class AppTopBarComponent implements OnInit {
     delete() {
         this.messageService.add({ severity: 'warn', summary: 'Delete', detail: 'Data Deleted' });
     }
+
+
+
+    
 }
 

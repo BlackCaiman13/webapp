@@ -1,0 +1,128 @@
+<p-toast></p-toast>
+<p-confirmDialog [style]="{width: '450px'}" acceptLabel="Oui" rejectLabel="Non"></p-confirmDialog>
+
+<div class="card">
+    <p-table [value]="materiels" [tableStyle]="{'min-width': '60rem'}"
+        [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+        [rowsPerPageOptions]="[10,25,50]"
+        dataKey="id"
+        currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} matériels">
+        
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Nature</th>
+                <th>Modèle</th>
+                <th>Statut</th>
+                <th>Employé</th>
+                <th>Actions</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-materiel>
+            <tr>
+                <td>{{materiel.nature}}</td>
+                <td>{{materiel.model}}</td>
+                <td>
+                    <span [class]="'status-badge ' + getStatusClass(materiel.status)">
+                        {{materiel.status === 0 ? 'Neuf' : 
+                          materiel.status === 1 ? 'En service' : 
+                          materiel.status === 2 ? 'En panne' : 
+                          'Neuf'}}
+                    </span>
+                </td>
+                <td>{{materiel.employe_ ? materiel.employe_.nomEmploye + ' ' + materiel.employe_.prenomEmploye : 'Non attribué'}}</td>
+                <td>
+                    <div class="flex gap-2">
+                        <button pButton pRipple icon="pi pi-user-plus" 
+                                class="p-button-rounded p-button-success" 
+                                (click)="showAttribuerDialog(materiel)"
+                                [disabled]="materiel.status !== 0"
+                                pTooltip="Attribuer à un employé"></button>
+                        <button pButton pRipple icon="pi pi-user-minus" 
+                                class="p-button-rounded p-button-warning" 
+                                (click)="revoquerAttribution(materiel)"
+                                [disabled]="!materiel.employe"
+                                pTooltip="Révoquer l'attribution"></button>
+                        <button pButton pRipple icon="pi pi-sync" 
+                                class="p-button-rounded p-button-info" 
+                                (click)="showChangerStatusDialog(materiel)"
+                                pTooltip="Changer le statut"></button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Dialog Attribution Matériel -->
+<p-dialog [(visible)]="displayAttribuerDialog" 
+          [style]="{width: '450px', height: '450px'}" 
+          header="Attribuer un matériel" 
+          [modal]="true">
+    <div class="flex flex-column gap-2">
+        <label for="employe">Sélectionner un employé</label>
+        <p-dropdown [options]="employes" 
+                   [(ngModel)]="selectedEmploye"
+                   optionLabel="nom"
+                   placeholder="Choisir un employé"
+                   [filter]="true"
+                   filterBy="nom,prenom"
+                   [showClear]="true"
+                   styleClass="w-full">
+            <ng-template pTemplate="selectedItem">
+                <div class="flex align-items-center gap-2" *ngIf="selectedEmploye">
+                    <div>{{selectedEmploye.nomEmploye}} {{selectedEmploye.prenomEmploye}}</div>
+                </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-employe>
+                <div class="flex align-items-center gap-2">
+                    <div>{{employe.nomEmploye}} {{employe.prenomEmploye}}</div>
+                </div>
+            </ng-template>
+        </p-dropdown>
+    </div>
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Annuler" icon="pi pi-times" class="p-button-text" (click)="displayAttribuerDialog = false"></button>
+        <button pButton pRipple label="Attribuer" icon="pi pi-check" class="p-button-text" (click)="confirmerAttribution()" [disabled]="!selectedEmploye"></button>
+    </ng-template>
+</p-dialog>
+
+<!-- Dialog Changement Status -->
+<p-dialog [(visible)]="displayChangerStatusDialog" 
+          [style]="{width: '450px', height: '400px'}" 
+          header="Changer le statut" 
+          [modal]="true">
+    <div class="flex flex-column gap-2">
+        <label for="status">Sélectionner un nouveau statut</label>
+        <p-dropdown [options]="statuts" 
+                   [(ngModel)]="selectedStatus"
+                   optionLabel="libelleStatus"
+                   placeholder="Choisir un statut"
+                   [showClear]="true"
+                   styleClass="w-full">
+        </p-dropdown>
+    </div>
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Annuler" icon="pi pi-times" class="p-button-text" (click)="displayChangerStatusDialog = false"></button>
+        <button pButton pRipple label="Changer" icon="pi pi-check" class="p-button-text" (click)="confirmerChangementStatus()" [disabled]="!selectedStatus"></button>
+    </ng-template>
+</p-dialog>
+
+<style>
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.status-neuf {
+    background-color: #C8E6C9;
+    color: #256029;
+}
+.status-en-service {
+    background-color: #FEEDAF;
+    color: #8A5340;
+}
+.status-en-panne {
+    background-color: #FFCDD2;
+    color: #C63737;
+}
+</style>
