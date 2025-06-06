@@ -2,9 +2,7 @@
 <p-confirmDialog [style]="{width: '450px'}" acceptLabel="Oui" rejectLabel="Non"></p-confirmDialog>
 
 <div class="card">
-    <div *ngIf="loading" class="flex justify-content-center">
-        <p-progressSpinner strokeWidth="4" [style]="{width: '50px', height: '50px'}"></p-progressSpinner>
-    </div>
+
     <h2>Matériels</h2>
     <!-- Barre de recherche globale -->
     <div class="flex justify-content-end mb-3">
@@ -15,7 +13,6 @@
     </div>
 
     <p-table #dt
-        [loading]="loading"
         [value]="materiels" 
         [tableStyle]="{'min-width': '60rem'}"
         [paginator]="true" 
@@ -89,6 +86,13 @@
                                 [class]="'p-button-rounded ' + (materiel.status === 2 ? 'p-button-success' : 'p-button-danger')" 
                                 (click)="toggleStatus(materiel)"
                                 [pTooltip]="materiel.status === 2 ? 'Remettre en service' : 'Mettre en panne'">
+                        </button>
+                        
+                        <button pButton pRipple icon="pi pi-trash" 
+                                class="p-button-rounded p-button-danger" 
+                                (click)="confirmerSuppression(materiel)"
+                                [disabled]="materiel.employe_"
+                                pTooltip="Supprimer le matériel">
                         </button>
                     </div>
                 </td>

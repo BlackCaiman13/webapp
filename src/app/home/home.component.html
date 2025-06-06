@@ -4,7 +4,7 @@
         <div class="flex justify-content-between mb-3">
             <div>
                 <span class="block text-500 font-medium mb-3">En panne</span>
-                <div class="text-900 font-medium text-xl">152</div>
+                <div class="text-900 font-medium text-xl">{{totalEnPanne}}</div>
             </div>
             <div class="flex align-items-center justify-content-center bg-blue-100 border-round" [ngStyle]="{width: '3.5rem', height: '3.5rem'}">
                 <i class="pi pi-wrench text-blue-500 " style="font-size: 2.3rem"></i>
@@ -18,7 +18,7 @@
         <div class="flex justify-content-between mb-3">
             <div>
                 <span class="block text-500 font-medium mb-3">Neuf</span>
-                <div class="text-900 font-medium text-xl">2100</div>
+                <div class="text-900 font-medium text-xl">{{totalNeufs}}</div>
             </div>
             <div class="flex align-items-center justify-content-center bg-orange-100 border-round" [ngStyle]="{width: '3.5rem', height: '3.5rem'}">
                 <i class="pi pi-check-circle text-orange-500 " style="font-size: 2.3rem"></i>
@@ -31,8 +31,8 @@
     <div class="card mb-0">
         <div class="flex justify-content-between mb-3">
             <div>
-                <span class="block text-500 font-medium mb-3">Usagé</span>
-                <div class="text-900 font-medium text-xl">28441</div>
+                <span class="block text-500 font-medium mb-3">En Service</span>
+                <div class="text-900 font-medium text-xl">{{totalEnService}}</div>
             </div>
             <div class="flex align-items-center justify-content-center bg-cyan-100 border-round" [ngStyle]="{width: '3.5rem', height: '3.5rem'}">
                 <i class="pi pi-tags text-cyan-500 " style="font-size: 2.3rem"></i>
@@ -83,6 +83,45 @@
                         </p-tag>
                     </td>
                     
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+</div>
+
+<!-- Statistiques des Fournisseurs -->
+<div *ngIf="this.admin || this.direxteur" class="col-12">
+    <div class="card">
+        <h5>Performance des Fournisseurs</h5>
+        <p-chart type="bar" [data]="fournisseursChartData" [options]="fournisseursChartOptions"></p-chart>
+    </div>
+</div>
+
+<!-- Tableau de classement des fournisseurs -->
+<div *ngIf="this.admin || this.direxteur"  class="col-12">
+    <div class="card">
+        <h5>Classement des Fournisseurs</h5>
+        <p-table [value]="statsFournisseurs" [rows]="5" [paginator]="true" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Fournisseur</th>
+                    <th>Total Matériels</th>
+                    <th>Taux de Panne</th>
+                    <th>Note</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-fournisseur>
+                <tr>
+                    <td>{{fournisseur.nomFournisseur}}</td>
+                    <td>{{fournisseur.totalMateriels}}</td>
+                    <td>
+                        <p-tag [value]="fournisseur.tauxPanne + '%'" 
+                              [severity]="getFournisseurStatusSeverity(fournisseur.tauxPanne)">
+                        </p-tag>
+                    </td>
+                    <td>
+                        <p-rating [ngModel]="getFournisseurRating(fournisseur)" [readonly]="true" [cancel]="false"></p-rating>
+                    </td>
                 </tr>
             </ng-template>
         </p-table>

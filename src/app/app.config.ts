@@ -5,12 +5,15 @@ import { AuthConfig, OAuthService, provideOAuthClient } from 'angular-oauth2-oid
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { AuthInterceptor } from './Services/auth/auth.interceptor';
-import { ErrorInterceptor } from './Services/error.interceptor';
+import { ErrorInterceptor } from './core/interceptors/error.interceptor';
+import { LoaderInterceptor } from './Services/loader.interceptor';
+import { MessageService } from 'primeng/api';
+import { ErrorService } from './core/services/error.service';
 
 
 export const authCodeFlowConfig: AuthConfig = {
-  issuer: 'http://localhost:8180/realms/my-test-realm',
-  tokenEndpoint: 'http://localhost:8180/realms/my-test-realm/protocol/openid-connect/token',
+  issuer: 'http://localhost:8180/realms/E-mat',
+  tokenEndpoint: 'http://localhost:8180/realms/E-mat/protocol/openid-connect/token',
   redirectUri: window.location.origin,
   clientId: 'my-webapp-client',
   responseType: 'code',
@@ -38,9 +41,11 @@ function initializeOAuth(oauthService: OAuthService): Promise<void> {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(),
+    provideHttpClient(withInterceptors([AuthInterceptor, ErrorInterceptor, LoaderInterceptor])),
     provideOAuthClient(),
-    provideHttpClient(withInterceptors([AuthInterceptor, ErrorInterceptor])),
+    provideAnimations(),
+    MessageService,
+    ErrorService,
     {
       provide: APP_INITIALIZER,
       useFactory: (oauthService: OAuthService) => {
@@ -48,9 +53,7 @@ export const appConfig: ApplicationConfig = {
       },
       multi: true,
       deps: [OAuthService]
-    },
-    
-    provideAnimations()
+    }
   ]
 };
 

@@ -16,7 +16,7 @@ import { Table } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
-import { CreateFournisseurDTO } from '../Dtos/fournisseur.dto';
+import { ErrorService } from '../core/services/error.service';
 
 @Component({
   selector: 'app-fournisseurs',
@@ -38,52 +38,55 @@ import { CreateFournisseurDTO } from '../Dtos/fournisseur.dto';
   templateUrl: './fournisseurs.component.html'
 })
 export class FournisseursComponent implements OnInit {
-  @ViewChild('dt') table!: Table;
-  
+  @ViewChild('dt') dt!: Table;
+
   fournisseurs: Fournisseur[] = [];
-  selectedFournisseur: Fournisseur | null = null;
   fournisseurDialog: boolean = false;
-  loading: boolean = true;
-  displayMaterielsDialog: boolean = false;
-  materiels: MaterielDTO[] = [];
-  fournisseurMateriels: MaterielDTO[] = [];
-  newFournisseur: Fournisseur = {} as Fournisseur;
+  deleteFournisseurDialog: boolean = false;
   isEditMode: boolean = false;
+  submitted: boolean = false;
+  displayMaterielsDialog = false;
+  materiels: MaterielDTO[] = [];
+  
+  newFournisseur: Fournisseur = {
+    nomFournisseur: '',
+    codeFournisseur: '',
+    etat: 0
+  } as Fournisseur;
+
+  selectedFournisseur: Fournisseur | null = null;
+  fournisseurMateriels: MaterielDTO[] = [];
 
   constructor(
     private fournisseurService: FournisseurService,
     private materielService: MaterielService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private errorService: ErrorService
   ) {}
 
   ngOnInit() {
     this.loadData();
   }
 
-  loadData() {
-    this.loading = true;
-    Promise.all([
-      this.loadFournisseurs(),
-      this.loadMateriels()
-    ]).then(() => {
-      this.loading = false;
-    });
+  async loadData() {
+    await this.loadMateriels();
+    await this.loadFournisseurs();
   }
 
   loadFournisseurs(): Promise<void> {
     return new Promise((resolve) => {
       this.fournisseurService.getAll().subscribe({
         next: (data) => {
-          this.fournisseurs = data;
+          this.fournisseurs = data.map(f => ({
+            ...f,
+            nombreMateriels: this.materiels.filter(m => m.fournisseur === f.id).length
+          }));
           resolve();
         },
-        error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des fournisseurs'
-          });
+        error: (error) => {
+          this.errorService.showError('Erreur lors du chargement des fournisseurs');
+          console.error('Erreur lors du chargement:', error);
           resolve();
         }
       });
@@ -98,11 +101,7 @@ export class FournisseursComponent implements OnInit {
           resolve();
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des matériels'
-          });
+          this.errorService.showError('Erreur lors du chargement des matériels');
           resolve();
         }
       });
@@ -110,30 +109,32 @@ export class FournisseursComponent implements OnInit {
   }
 
   onGlobalFilter(event: any) {
-    this.table.filterGlobal(event.target.value, 'contains');
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dt.filterGlobal(filterValue, 'contains');
   }
 
   openNew() {
-    this.newFournisseur = {} as Fournisseur;
+    this.newFournisseur = {
+      nomFournisseur: '',
+      codeFournisseur: '',
+      etat: 0
+    } as Fournisseur;
     this.isEditMode = false;
+    this.submitted = false;
     this.fournisseurDialog = true;
   }
 
   editFournisseur(fournisseur: Fournisseur) {
     this.newFournisseur = { ...fournisseur };
-    this.isEditMode = true;
     this.fournisseurDialog = true;
+    this.isEditMode = true;
   }
 
   deleteFournisseur(fournisseur: Fournisseur) {
     // Vérifier si le fournisseur a des matériels assignés
     const materielsAssignes = this.materiels.filter(m => m.fournisseur === fournisseur.id);
     if (materielsAssignes.length > 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Suppression impossible',
-        detail: 'Ce fournisseur a des matériels qui lui sont assignés'
-      });
+      this.errorService.showError('Ce fournisseur a des matériels qui lui sont assignés');
       return;
     }
 
@@ -145,19 +146,10 @@ export class FournisseursComponent implements OnInit {
         this.fournisseurService.delete(fournisseur.id!).subscribe({
           next: () => {
             this.loadFournisseurs();
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Succès',
-              detail: 'Fournisseur supprimé avec succès',
-              life: 3000
-            });
+            this.errorService.showSuccess('Fournisseur supprimé avec succès');
           },
           error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erreur',
-              detail: 'Erreur lors de la suppression du fournisseur'
-            });
+            this.errorService.showError('Erreur lors de la suppression du fournisseur');
           }
         });
       }
@@ -170,23 +162,14 @@ export class FournisseursComponent implements OnInit {
         next: () => {
           this.loadFournisseurs();
           this.fournisseurDialog = false;
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Succès',
-            detail: 'Fournisseur modifié avec succès',
-            life: 3000
-          });
+          this.errorService.showSuccess('Fournisseur modifié avec succès');
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors de la modification du fournisseur'
-          });
+          this.errorService.showError('Erreur lors de la modification du fournisseur');
         }
       });
     } else {
-      const createFournisseurDTO: CreateFournisseurDTO = {
+      const createFournisseurDTO = {
         nomFournisseur: this.newFournisseur.nomFournisseur,
         codeFournisseur: this.newFournisseur.codeFournisseur,
         etatId: this.newFournisseur.etat
@@ -196,19 +179,10 @@ export class FournisseursComponent implements OnInit {
         next: () => {
           this.loadFournisseurs();
           this.fournisseurDialog = false;
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Succès',
-            detail: 'Fournisseur créé avec succès',
-            life: 3000
-          });
+          this.errorService.showSuccess('Fournisseur créé avec succès');
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors de la création du fournisseur'
-          });
+          this.errorService.showError('Erreur lors de la création du fournisseur');
         }
       });
     }

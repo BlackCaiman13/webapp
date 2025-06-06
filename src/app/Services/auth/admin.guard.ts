@@ -16,7 +16,7 @@ export class AdminGuard {
     if (isAuthenticated && isAdmin) {
       return true;
     } else {
-      this.router.navigate(['/']);
+      this.router.navigate(['access-deny']);
       return false;
     }
   };

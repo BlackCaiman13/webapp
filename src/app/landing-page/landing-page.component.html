@@ -1,27 +1,154 @@
 <div class="landing-page">
-  <p-menubar styleClass="custom-menubar">
-    <ng-template pTemplate="start">
+  <div class="noise-overlay"></div>
+  
+  <header class="main-header">
+    <nav class="nav-container">
       <div class="brand">
         <span class="brand-name">E-mat</span>
       </div>
-    </ng-template>
-    
-  </p-menubar>
+      <div class="nav-links">
+        <a href="#features">Fonctionnalités</a>
+        <a href="#about">À propos</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="nav-actions">
+        <button pButton (click)="login()" label="Se connecter" class="p-button-text"></button>
+        <button pButton (click)="login()" label="Essai gratuit" class="p-button-primary"></button>
+      </div>
+    </nav>
+  </header>
 
   <section class="hero">
-    <div class="gradient-overlay"></div>
+    <div class="hero-background">
+      <div class="gradient-sphere gradient-sphere-1"></div>
+      <div class="gradient-sphere gradient-sphere-2"></div>
+      <div class="noise-overlay"></div>
+    </div>
+    
     <div class="container">
       <div class="hero-content">
-        <h1 class="gradient-text">Une solution complète</h1>
-        <h2 class="gradient-text-secondary">pour la gestion des ressources</h2>
-        <p class="hero-description">E-mat vous permet de gérer vos matériels, employés, fournisseurs et bien plus encore avec une plateforme intuitive et performante.</p>
-        <div class="hero-buttons">
-          <button pButton (click)="login()" label="Commencer maintenant" class="btn-primary p-button-rounded p-button-lg"></button>
-          <button pButton label="En savoir plus" class="btn-secondary p-button-rounded p-button-lg"></button>
+        <div class="hero-text-content">
+          <h1 class="hero-title">
+            <span class="gradient-text">Simplifiez la gestion</span>
+            <span class="gradient-text">de vos ressources</span>
+          </h1>
+          <p class="hero-description">
+            Une plateforme intuitive pour gérer efficacement vos équipements, 
+            suivre vos inventaires et optimiser vos ressources.
+            <span class="highlight">Conçue pour les entreprises modernes.</span>
+          </p>
+          <div class="hero-actions">
+            <button pButton (click)="login()" 
+                    label="Commencer gratuitement" 
+                    class="p-button-rounded p-button-lg start-button">
+            </button>
+            <button pButton 
+                    label="Voir la démo" 
+                    class="p-button-rounded p-button-lg p-button-outlined demo-button">
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="pi pi-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">98%</span>
+              <span class="stat-label">Satisfaction client</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="pi pi-users"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">50+</span>
+              <span class="stat-label">Entreprises nous font confiance</span>
+            </div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="pi pi-clock"></i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">24/7</span>
+              <span class="stat-label">Support disponible</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- <section id="features" class="features">
+    <div class="container">
+      <h2 class="section-title">
+        <span class="gradient-text">Découvrez nos fonctionnalités</span>
+      </h2>
+      <p class="section-subtitle">Des outils puissants pour une gestion efficace</p>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-box"></i>
+          </div>
+          <h3>Gestion des matériels</h3>
+          <p>Suivez vos équipements en temps réel, gérez les stocks et optimisez leur utilisation.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-users"></i>
+          </div>
+          <h3>Gestion des employés</h3>
+          <p>Attribuez des ressources, gérez les accès et suivez les utilisations.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-truck"></i>
+          </div>
+          <h3>Suivi des livraisons</h3>
+          <p>Planifiez et suivez vos livraisons en temps réel avec une traçabilité complète.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="pi pi-chart-bar"></i>
+          </div>
+          <h3>Analyses et rapports</h3>
+          <p>Générez des rapports détaillés et prenez des décisions éclairées.</p>
+        </div>
+      </div>
+    </div>
+  </section> -->
+
+  <!-- <section class="trust-banner">
+    <div class="container">
+      <h2 class="section-title">Ils nous font confiance</h2>
+      <div class="logos-grid">
+        <div class="logo-item">Entreprise 1</div>
+        <div class="logo-item">Entreprise 2</div>
+        <div class="logo-item">Entreprise 3</div>
+        <div class="logo-item">Entreprise 4</div>
+        <div class="logo-item">Entreprise 5</div>
+      </div>
+    </div>
+  </section> -->
+
+  <!-- <section class="cta-section">
+    <div class="container">
+      <div class="cta-content">
+        <h2 class="gradient-text">Prêt à optimiser votre gestion ?</h2>
+        <p>Rejoignez les entreprises qui font confiance à E-mat pour leur gestion de ressources.</p>
+        <button pButton (click)="login()" label="Commencer maintenant" class="p-button-rounded p-button-lg start-button"></button>
+      </div>
+    </div>
+  </section> -->
 
   <footer class="footer">
     <div class="footer-content">

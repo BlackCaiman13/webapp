@@ -16,6 +16,7 @@ import { Table } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
+import { ErrorService } from '../core/services/error.service';
 
 @Component({
   selector: 'app-employes',
@@ -53,7 +54,8 @@ export class EmployesComponent implements OnInit {
     private employeService: EmployeService,
     private materielService: MaterielService,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private errorService: ErrorService
   ) {}
 
   ngOnInit() {
@@ -61,13 +63,10 @@ export class EmployesComponent implements OnInit {
   }
 
   loadData() {
-    this.loading = true;
     Promise.all([
       this.loadEmployes(),
       this.loadMateriels()
-    ]).then(() => {
-      this.loading = false;
-    });
+    ]);
   }
 
   loadEmployes(): Promise<void> {
@@ -78,11 +77,7 @@ export class EmployesComponent implements OnInit {
           resolve();
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des employés'
-          });
+          this.errorService.showError('Erreur lors du chargement des employés');
           resolve();
         }
       });
@@ -97,11 +92,7 @@ export class EmployesComponent implements OnInit {
           resolve();
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des matériels'
-          });
+          this.errorService.showError('Erreur lors du chargement des matériels');
           resolve();
         }
       });
@@ -124,11 +115,7 @@ export class EmployesComponent implements OnInit {
     // Vérifier si l'employé a des matériels assignés
     const materielsAssignes = this.materiels.filter(m => m.employe === employe.id);
     if (materielsAssignes.length > 0) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Suppression impossible',
-        detail: 'Cet employé a des matériels qui lui sont assignés'
-      });
+      this.errorService.showError('Cet employé a des matériels qui lui sont assignés');
       return;
     }
 
@@ -140,19 +127,10 @@ export class EmployesComponent implements OnInit {
         this.employeService.delete(employe.id!).subscribe({
           next: () => {
             this.loadEmployes();
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Succès',
-              detail: 'Employé supprimé avec succès',
-              life: 3000
-            });
+            this.errorService.showSuccess('Employé supprimé avec succès');
           },
           error: () => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erreur',
-              detail: 'Erreur lors de la suppression de l\'employé'
-            });
+            this.errorService.showError('Erreur lors de la suppression de l\'employé');
           }
         });
       }
@@ -165,19 +143,10 @@ export class EmployesComponent implements OnInit {
         next: () => {
           this.loadEmployes();
           this.employeDialog = false;
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Succès',
-            detail: 'Employé modifié avec succès',
-            life: 3000
-          });
+          this.errorService.showSuccess('Employé modifié avec succès');
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors de la modification de l\'employé'
-          });
+          this.errorService.showError('Erreur lors de la modification de l\'employé');
         }
       });
     } else {
@@ -185,19 +154,10 @@ export class EmployesComponent implements OnInit {
         next: () => {
           this.loadEmployes();
           this.employeDialog = false;
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Succès',
-            detail: 'Employé créé avec succès',
-            life: 3000
-          });
+          this.errorService.showSuccess('Employé créé avec succès');
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors de la création de l\'employé'
-          });
+          this.errorService.showError('Erreur lors de la création de l\'employé');
         }
       });
     }

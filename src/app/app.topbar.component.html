@@ -18,7 +18,7 @@
     <div #topbarmenu class="layout-topbar-menu"  [class.layout-topbar-menu-mobile-active]="layoutService.state.profileSidebarVisible">
          <div class="flex align-items-center gap-2">
              <span class="p-link">{{authService.getUserFullName() + " (" + authService.getLastRole() + ")"}}</span>
-             <p-avatar image="https://www.gravatar.com/avatar/05dfd4b41340d09cae045235eb0893c3?d=mp" class="p-link" shape="circle" (click)="authService.logout()" />
+             <p-avatar image="https://primefaces.org/cdn/primeng/images/demo/avatar/amyelsner.png" class="p-link" shape="circle" (click)="authService.logout()" />
          </div>
 
        

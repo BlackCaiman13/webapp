@@ -16,7 +16,7 @@ export class DirecteurGuard {
     if (isAuthenticated && isDirecteur) {
       return true;
     } else {
-      this.router.navigate(['/']);
+      this.router.navigate(['access-deny']);
       return false;
     }
   };

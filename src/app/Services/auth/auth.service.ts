@@ -3,6 +3,7 @@ import { OAuthService } from 'angular-oauth2-oidc';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { UserClaims as BaseUserClaims } from '../../Dtos/userclaims';
 import { Router } from '@angular/router';
+import { LoaderService } from '../loader.service';
 
 interface UserClaims extends BaseUserClaims {
   isAdmin?: boolean;
@@ -21,7 +22,8 @@ export class AuthService {
 
   constructor(
     private oauthService: OAuthService,
-    private router: Router
+    private router: Router,
+    private loaderService: LoaderService
   ) {
     this.loadUserInfo();
   }
@@ -94,8 +96,15 @@ export class AuthService {
   }
 
   logout(): void {
+    this.loaderService.show();
     this.oauthService.logOut();
     this.userInfoSubject.next(null);
+    
+    // Ajout d'un délai pour montrer le loader
+    setTimeout(() => {
+      this.router.navigate(['/']);
+      this.loaderService.hide();
+    }, 1000);
   }
 
   refreshUserInfo(): void {

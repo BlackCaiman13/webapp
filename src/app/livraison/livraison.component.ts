@@ -1,6 +1,7 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableModule, Table } from 'primeng/table';
+import { FilterService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -23,7 +24,17 @@ import { ConstructeurService } from '../Services/constructeur.service';
 import { FournisseurService } from '../Services/fournisseur.service';
 import { LocalDateTime, convert, Instant, ZoneId } from '@js-joda/core';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { ErrorService } from '../core/services/error.service';
 
+interface EditMateriel {
+  id?: number;
+  nature: string;
+  model: string;
+  type?: { id: number; libelleType: string };
+  constructeur?: { id: number; nomConstructeur: string };
+  fournisseur?: { id: number; nomFournisseur: string };
+  status?: number;
+}
 
 @Component({
   selector: 'app-livraison',
@@ -43,13 +54,12 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
     InputTextModule,
     ProgressSpinnerModule
   ],
-  providers: [MessageService, ConfirmationService],
+  providers: [MessageService, ConfirmationService, FilterService],
   templateUrl: './livraison.component.html'
 })
-export class LivraisonComponent implements OnInit {
+export class LivraisonComponent implements OnInit, AfterViewInit {
   @ViewChild('dt') dt!: Table;
-
-  loading: boolean = true;
+  
   livraisons: LivraisonDTO[] = [];
   selectedLivraisons: LivraisonDTO[] = [];
   livraisonDialog = false;
@@ -69,7 +79,6 @@ export class LivraisonComponent implements OnInit {
     dateHeure: this.getLocalDateTime(),
     materiels: [] as any[]
   };
-
   newMateriel: any = {
     nature: '',
     model: '',
@@ -89,12 +98,11 @@ export class LivraisonComponent implements OnInit {
     private materielService: MaterielService,
     private confirmationService: ConfirmationService,
     private constructeurService: ConstructeurService,
-    private fournisseurService: FournisseurService
+    private fournisseurService: FournisseurService,
+    private errorService: ErrorService
   ) {}
 
   ngOnInit() {
-    this.loading = true;
-    // Charger toutes les données nécessaires en parallèle
     Promise.all([
       this.loadTypes(),
       this.loadMateriels(),
@@ -105,6 +113,15 @@ export class LivraisonComponent implements OnInit {
     });
   }
 
+  ngAfterViewInit() {
+    // Ajouter le filtre personnalisé pour les dates une fois que la vue est initialisée
+    if (this.dt && this.dt.filterService) {
+      this.dt.filterService.register('dateHeure', (value: any, filter: any): boolean => {
+        return this.customFilterDate(value, filter);
+      });
+    }
+  }
+
   loadMateriels(): Promise<void> {
     return new Promise((resolve) => {
       this.materielService.getAll().subscribe({
@@ -113,11 +130,7 @@ export class LivraisonComponent implements OnInit {
           resolve();
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des matériels'
-          });
+          this.errorService.showError('Erreur lors du chargement des matériels');
           resolve();
         }
       });
@@ -132,11 +145,7 @@ export class LivraisonComponent implements OnInit {
           resolve();
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des constructeurs'
-          });
+          this.errorService.showError('Erreur lors du chargement des constructeurs');
           resolve();
         }
       });
@@ -151,17 +160,12 @@ export class LivraisonComponent implements OnInit {
           resolve();
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des fournisseurs'
-          });
+          this.errorService.showError('Erreur lors du chargement des fournisseurs');
           resolve();
         }
       });
     });
   }
-
 
   loadTypes(): Promise<void> {
     return new Promise((resolve) => {
@@ -170,21 +174,13 @@ export class LivraisonComponent implements OnInit {
           this.types = types;
           resolve();
         },
-        error: (error) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des types'
-          });
+        error: () => {
+          this.errorService.showError('Erreur lors du chargement des types');
           resolve();
         }
       });
     });
   }
-
-
-
-
 
   showDetails(livraison: LivraisonDTO): void {
     this.selectedLivraison = livraison;
@@ -215,19 +211,12 @@ export class LivraisonComponent implements OnInit {
   }
 
   getLivraisons() {
-    this.loading = true;
     this.livraisonService.getAllLivraisons().subscribe({
       next: (data) => {
         this.livraisons = data;
-        this.loading = false;
       },
       error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Erreur lors du chargement des livraisons'
-        });
-        this.loading = false;
+        this.errorService.showError('Erreur lors du chargement des livraisons');
       }
     });
   }
@@ -260,13 +249,7 @@ export class LivraisonComponent implements OnInit {
       statusid: this.newMateriel.statusid,
     });
     this.displayMaterielDialog = false;
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Succès',
-      detail: 'Matériel ajouté à la livraison'
-    });
-
-    
+    this.errorService.showSuccess('Matériel ajouté à la livraison');
   }
 
   removeMateriel(index: number) {
@@ -282,14 +265,30 @@ export class LivraisonComponent implements OnInit {
   }
 
   editLivraison(livraison: LivraisonDTO) {
-    this.livraison = { ...livraison };
-    this.selectedMateriels = [ ];
-    this.livraisonDialog = true;
+    this.newLivraison = {
+      ...livraison,
+      dateHeure: new Date(livraison.dateHeure),
+      materiels: []
+    };
+
+    // Récupérer les matériels associés à cette livraison
+    const materielsAssocies = this.mapToModel(
+      this.materiels.filter(m => m.livraison === livraison.id)
+    );
+
+    // Assigner les matériels à la livraison
+    this.newLivraison.materiels = materielsAssocies.map(materiel => ({
+      nature: materiel.nature,
+      model: materiel.model,
+      type: materiel.type,
+      constructeur: materiel.constructeur,
+      fournisseur: materiel.fournisseur,
+      status: materiel.status
+    }));
+
+    this.displayDialog = true;
     this.editMode = true;
   }
-
-  // Fonction utilitaire pour formater la date et l'heure au format souhaité
-
 
   private formatDateForBackend(date: Date): string {
     return LocalDateTime.ofInstant(
@@ -300,21 +299,48 @@ export class LivraisonComponent implements OnInit {
 
   saveLivraison() {
     this.submitted = true;
-    if (this.editMode && this.livraison.id) {
-      const dateToSend = this.formatDateForBackend(new Date(this.livraison.dateHeure));
-      this.livraisonService.updateLivraison(this.livraison.id, { 
-        ...this.livraison, 
-        dateHeure: dateToSend,
-        materiels: this.selectedMateriels.map(m => m.id!) 
-      }).subscribe(() => {
-        this.getLivraisons();
-        this.livraisonDialog = false;
-        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Livraison modifiée', life: 3000 });
+    const dateToSend = this.formatDateForBackend(this.newLivraison.dateHeure);
+
+    if (this.editMode) {
+      // Mise à jour d'une livraison existante
+      this.livraisonService.updateLivraison(this.newLivraison.id!, {
+        dateHeure: dateToSend
+      }).subscribe({
+        next: () => {
+          // Mise à jour des matériels associés
+          const updatePromises = this.newLivraison.materiels.map((materiel: EditMateriel) => 
+            this.materielService.update(materiel.id!, {
+              nature: materiel.nature,
+              model: materiel.model,
+              type: materiel.type?.id,
+              constructeur: materiel.constructeur?.id,
+              fournisseur: materiel.fournisseur?.id,
+              status: materiel.status,
+              livraison: this.newLivraison.id
+            }).toPromise()
+          );
+
+          Promise.all(updatePromises).then(() => {
+            Promise.all([
+              this.loadMateriels(),
+              this.loadTypes(),
+              this.loadConstructeurs(),
+              this.loadFournisseurs()
+            ]).then(() => {
+              this.displayDialog = false;
+              this.getLivraisons();
+              this.errorService.showSuccess('Livraison mise à jour avec succès');
+            });
+          }).catch(() => {
+            this.errorService.showError('Erreur lors de la mise à jour des matériels');
+          });
+        },
+        error: () => {
+          this.errorService.showError('Erreur lors de la mise à jour de la livraison');
+        }
       });
     } else {
-      // Formater la date avant l'envoi
-      const dateToSend = this.formatDateForBackend(this.newLivraison.dateHeure);
-      
+      // Création d'une nouvelle livraison
       this.livraisonService.createLivraisonAvecMateriels(
         { dateHeure: dateToSend },
         this.newLivraison.materiels
@@ -327,23 +353,12 @@ export class LivraisonComponent implements OnInit {
             this.loadFournisseurs()
           ]).then(() => {
             this.getLivraisons();
-            this.livraisonDialog = false;
             this.displayDialog = false;
-            this.messageService.add({ 
-              severity: 'success', 
-              summary: 'Succès', 
-              detail: 'Livraison créée', 
-              life: 3000 
-            });
+            this.errorService.showSuccess('Livraison créée avec succès');
           });
         },
-        error: (error) => {
-          this.messageService.add({ 
-            severity: 'error', 
-            summary: 'Erreur', 
-            detail: 'Erreur lors de la création de la livraison', 
-            life: 3000 
-          });
+        error: () => {
+          this.errorService.showError('Erreur lors de la création de la livraison');
         }
       });
     }
@@ -366,12 +381,7 @@ export class LivraisonComponent implements OnInit {
               this.loadFournisseurs()
             ]).then(() => {
               this.getLivraisons();
-              this.messageService.add({ 
-                severity: 'success', 
-                summary: 'Succès', 
-                detail: 'Livraison supprimée', 
-                life: 3000 
-              });
+              this.errorService.showSuccess('Livraison supprimée');
             });
           },
           error: (error) => {
@@ -384,28 +394,13 @@ export class LivraisonComponent implements OnInit {
              
               if (materielsAssocies.length > 0) {
                 const materielsDetails = materielsAssocies.map(m => `${m.nature} (${m.model})`).join(', ');
-                this.messageService.add({ 
-                  severity: 'error', 
-                  summary: 'Suppression impossible', 
-                  detail: `Impossible de supprimer cette livraison car elle contient les matériels suivants : ${materielsDetails}`, 
-                  life: 7000 
-                });
+                this.errorService.showError(`Impossible de supprimer cette livraison car elle contient les matériels suivants : ${materielsDetails}`);
               } else {
                 // Fallback si on ne trouve pas les matériels dans la liste locale
-                this.messageService.add({ 
-                  severity: 'error', 
-                  summary: 'Suppression impossible', 
-                  detail: 'Impossible de supprimer cette livraison car elle contient des matériels associés', 
-                  life: 5000 
-                });
+                this.errorService.showError('Impossible de supprimer cette livraison car elle contient des matériels associés');
               }
             } else {
-              this.messageService.add({ 
-                severity: 'error', 
-                summary: 'Erreur', 
-                detail: 'Une erreur est survenue lors de la suppression', 
-                life: 5000 
-              });
+              this.errorService.showError('Une erreur est survenue lors de la suppression');
             }
           }
         });
@@ -426,6 +421,33 @@ export class LivraisonComponent implements OnInit {
   onGlobalFilter(event: Event) {
     const filterValue = (event.target as HTMLInputElement).value;
     this.dt.filterGlobal(filterValue, 'contains');
+  }
+
+  onDateSelect(value: any, filterCallback: Function) {
+    if (value) {
+      const date = new Date(value);
+      filterCallback(date);
+    } else {
+      filterCallback(null);
+    }
+  }
+
+  customFilterDate(value: any, filter: any): boolean {
+    if (filter === undefined || filter === null || filter.trim() === '') {
+      return true;
+    }
+
+    if (value === undefined || value === null) {
+      return false;
+    }
+
+    const filterDate = new Date(filter);
+    const valueDate = new Date(value);
+
+    // Compare les dates sans tenir compte de l'heure
+    return filterDate.getDate() === valueDate.getDate() &&
+           filterDate.getMonth() === valueDate.getMonth() &&
+           filterDate.getFullYear() === valueDate.getFullYear();
   }
 }
 

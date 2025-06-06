@@ -18,6 +18,7 @@ import { Status } from '../Models/status.model';
 import { Table } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { ErrorService } from '../core/services/error.service';
 
 interface MaterielWithEmploye extends MaterielDTO {
   employe_: Employe | null;
@@ -53,18 +54,17 @@ export class MaterielsComponent implements OnInit {
   statuts: Status[] = [];
   selectedEmploye: Employe | null = null;
   selectedStatus: Status | null = null;
-  loading: boolean = true;
 
   constructor(
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private materielService: MaterielService,
     private employeService: EmployeService,
-    private statusService: StatusService
+    private statusService: StatusService,
+    private errorService: ErrorService
   ) {}
 
   ngOnInit() {
-    this.loading = true;
     // Charger les données initiales
     Promise.all([
       this.loadEmployes(),
@@ -75,19 +75,12 @@ export class MaterielsComponent implements OnInit {
   }
 
   loadMateriels() {
-    this.loading = true;
     this.materielService.getAll().subscribe({
       next: (materiels) => {
         this.materiels = this.mapToModel(materiels);
-        this.loading = false;
       },
       error: () => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Erreur lors du chargement des matériels'
-        });
-        this.loading = false;
+        this.errorService.showError('Erreur lors du chargement des matériels');
       }
     });
   }
@@ -100,11 +93,7 @@ export class MaterielsComponent implements OnInit {
           resolve();
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des employés'
-          });
+          this.errorService.showError('Erreur lors du chargement des employés');
           resolve();
         }
       });
@@ -112,25 +101,11 @@ export class MaterielsComponent implements OnInit {
   }
 
   mapToModel(materiels: MaterielDTO[]): MaterielWithEmploye[] {
-
-      return materiels.map(materiel => ({
-        id: materiel.id,
-        nature: materiel.nature,
-        model: materiel.model,
-        type: materiel.type,
-        constructeur: materiel.constructeur,
-        fournisseur: materiel.fournisseur,
-        status: materiel.status,
-        employe_: this.employes.find(e => e.id === materiel.employe) || null,
-        employe: materiel.employe,
-        livraison: materiel.livraison
-
-        
-      }));
-
-    }
-  
-
+    return materiels.map(materiel => ({
+      ...materiel,
+      employe_: this.employes.find(e => e.id === materiel.employe) || null,
+    }));
+  }
 
   loadStatus() {
     return new Promise<void>((resolve) => {
@@ -140,11 +115,7 @@ export class MaterielsComponent implements OnInit {
           resolve();
         },
         error: () => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Erreur',
-            detail: 'Erreur lors du chargement des statuts'
-          });
+          this.errorService.showError('Erreur lors du chargement des statuts');
           resolve();
         }
       });
@@ -153,12 +124,7 @@ export class MaterielsComponent implements OnInit {
 
   showAttribuerDialog(materiel: MaterielDTO) {
     if (materiel.status !== 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Attribution impossible',
-        detail: 'Seuls les matériels neufs peuvent être attribués',
-        life: 3000
-      });
+      this.errorService.showWarning('Seuls les matériels neufs peuvent être attribués');
       return;
     }
     this.selectedMateriel = materiel;
@@ -176,22 +142,12 @@ export class MaterielsComponent implements OnInit {
       accept: () => {
         this.materielService.attribuerMateriel(this.selectedMateriel!.id!, this.selectedEmploye!.id!).subscribe({
           next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Succès',
-              detail: 'Matériel attribué avec succès',
-              life: 3000
-            });
+            this.errorService.showSuccess('Matériel attribué avec succès');
             this.loadMateriels();
             this.displayAttribuerDialog = false;
           },
           error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erreur',
-              detail: error.error?.message || 'Erreur lors de l\'attribution du matériel',
-              life: 3000
-            });
+            this.errorService.showError(error.error?.message || "Erreur lors de l'attribution du matériel");
           }
         });
       }
@@ -213,28 +169,18 @@ export class MaterielsComponent implements OnInit {
     }
 
     this.confirmationService.confirm({
-      message: message,
+      message,
       header: 'Confirmation du changement de status',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.materielService.changerEtat(this.selectedMateriel!.id!, this.selectedStatus!.id!).subscribe({
           next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Succès',
-              detail: 'Status du matériel modifié avec succès',
-              life: 3000
-            });
+            this.errorService.showSuccess('Status du matériel modifié avec succès');
             this.loadMateriels();
             this.displayChangerStatusDialog = false;
           },
           error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erreur',
-              detail: error.error?.message || 'Erreur lors du changement de status',
-              life: 3000
-            });
+            this.errorService.showError(error.error?.message || 'Erreur lors du changement de status');
           }
         });
       }
@@ -243,12 +189,7 @@ export class MaterielsComponent implements OnInit {
 
   revoquerAttribution(materiel: MaterielDTO) {
     if (!materiel.employe) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Révocation impossible',
-        detail: 'Ce matériel n\'est attribué à aucun employé',
-        life: 3000
-      });
+      this.errorService.showWarning('Ce matériel n\'est attribué à aucun employé');
       return;
     }
 
@@ -259,21 +200,11 @@ export class MaterielsComponent implements OnInit {
       accept: () => {
         this.materielService.revoquerAttribution(materiel.id!).subscribe({
           next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Succès',
-              detail: 'Attribution révoquée avec succès',
-              life: 3000
-            });
+            this.errorService.showSuccess('Attribution révoquée avec succès');
             this.loadMateriels();
           },
           error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erreur',
-              detail: error.error?.message || 'Erreur lors de la révocation',
-              life: 3000
-            });
+            this.errorService.showError(error.error?.message || 'Erreur lors de la révocation');
           }
         });
       }
@@ -291,21 +222,11 @@ export class MaterielsComponent implements OnInit {
       accept: () => {
         this.materielService.changerEtat(materiel.id!, newStatusId).subscribe({
           next: () => {
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Succès',
-              detail: `Matériel ${action} avec succès`,
-              life: 3000
-            });
+            this.errorService.showSuccess(`Matériel ${action} avec succès`);
             this.loadMateriels();
           },
           error: (error) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Erreur',
-              detail: error.error?.message || 'Erreur lors du changement de statut',
-              life: 3000
-            });
+            this.errorService.showError(error.error?.message || 'Erreur lors du changement de statut');
           }
         });
       }
@@ -321,7 +242,7 @@ export class MaterielsComponent implements OnInit {
       case 2:
         return 'status-en-panne';
       default:
-        return '';
+        return 'status-neuf';
     }
   }
 
@@ -332,5 +253,33 @@ export class MaterielsComponent implements OnInit {
 
   clear(table: Table) {
     table.clear();
+  }
+
+  confirmerSuppression(materiel: MaterielWithEmploye) {
+    if (materiel.employe_) {
+      this.errorService.showError('Impossible de supprimer un matériel attribué à un employé');
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `Êtes-vous sûr de vouloir supprimer le matériel ${materiel.nature} - ${materiel.model} ?`,
+      header: 'Confirmation de suppression',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        if (materiel.id !== undefined) {
+          this.materielService.delete(materiel.id).subscribe({
+            next: () => {
+              this.errorService.showSuccess('Le matériel a été supprimé avec succès');
+              this.loadMateriels();
+            },
+            error: () => {
+              this.errorService.showError('Une erreur est survenue lors de la suppression du matériel');
+            }
+          });
+        } else {
+          this.errorService.showError("Impossible de supprimer : l'identifiant du matériel est manquant.");
+        }
+      }
+    });
   }
 }
