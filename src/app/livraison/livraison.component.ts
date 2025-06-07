@@ -346,15 +346,22 @@ export class LivraisonComponent implements OnInit, AfterViewInit {
         this.newLivraison.materiels
       ).subscribe({
         next: () => {
-          Promise.all([
-            this.loadMateriels(),
-            this.loadTypes(),
-            this.loadConstructeurs(),
-            this.loadFournisseurs()
-          ]).then(() => {
-            this.getLivraisons();
-            this.displayDialog = false;
-            this.errorService.showSuccess('Livraison créée avec succès');
+          this.livraisonService.getAllLivraisons().subscribe({
+            next: (data) => {
+              this.livraisons = data;
+              Promise.all([
+                this.loadMateriels(),
+                this.loadTypes(),
+                this.loadConstructeurs(),
+                this.loadFournisseurs()
+              ]).then(() => {
+                this.displayDialog = false;
+                this.errorService.showSuccess('Livraison créée avec succès');
+              });
+            },
+            error: () => {
+              this.errorService.showError('Erreur lors de la récupération des livraisons');
+            }
           });
         },
         error: () => {

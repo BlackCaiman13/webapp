@@ -40,7 +40,7 @@ export class DashboardService {
     return Object.entries(evolution.evolution).map(([mois, stats]: [string, any]) => ({
       mois,
       neuf: stats['Neuf'] || 0,
-      enService: stats['En service'] || 0,
+      enService: stats['Usagé'] || 0,
       enPanne: stats['En panne'] || 0
     }));
   }

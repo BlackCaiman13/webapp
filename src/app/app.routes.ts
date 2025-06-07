@@ -2,9 +2,7 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { LandingPageComponent } from './landing-page/landing-page.component';
 import { AuthGuard } from './Services/auth/auth.guard';
-import { AdminGuard } from './Services/auth/admin.guard';
-import { DirecteurGuard } from './Services/auth/directeur.guard';
-import { ExploitantGuard } from './Services/auth/exploitant.guard';
+import { CombinedGuard } from './Services/auth/combined.guard';
 import { MainLayoutComponent } from './main-layout/main-layout.component';
 import { AccessdenyComponent } from './accessdeny/accessdeny.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
@@ -27,22 +25,26 @@ export const routes: Routes = [
       { 
         path: 'livraison', 
         component: LivraisonComponent,
-        canMatch: [AdminGuard, ExploitantGuard]
+        canActivate: [CombinedGuard],
+        data: { roles: ['admin', 'exploitant'] }
       },
       { 
         path: 'materiels', 
         component: MaterielsComponent,
-        canMatch: [AdminGuard, ExploitantGuard]
+        canActivate: [CombinedGuard],
+        data: { roles: ['admin', 'exploitant'] }
       },
       { 
         path: 'employes',
         component: EmployesComponent,
-        canMatch: [AdminGuard, ExploitantGuard]
+        canActivate: [CombinedGuard],
+        data: { roles: ['admin', 'exploitant'] }
       },
       { 
         path: 'fournisseurs',
         component: FournisseursComponent,
-        canMatch: [AdminGuard, DirecteurGuard, ExploitantGuard]
+        canActivate: [CombinedGuard],
+        data: { roles: ['admin', 'directeur'] }
       }
     ]
   },

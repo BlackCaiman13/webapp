@@ -54,6 +54,11 @@ export class MaterielsComponent implements OnInit {
   statuts: Status[] = [];
   selectedEmploye: Employe | null = null;
   selectedStatus: Status | null = null;
+  statusMap: Record<number, string> = {
+    0: 'Neuf',
+    1: 'En service',
+    2: 'En panne'
+  };
 
   constructor(
     private messageService: MessageService,
@@ -281,5 +286,45 @@ export class MaterielsComponent implements OnInit {
         }
       }
     });
+  }
+
+  getStatusValue(libelleStatus: string): number {
+    // Convertir le libellé en valeur numérique
+    switch (libelleStatus.toUpperCase()) {
+      case 'NEUF':
+        return 0;
+      case 'EN SERVICE':
+      case 'EN_SERVICE':
+        return 1;
+      case 'EN PANNE':
+      case 'EN_PANNE':
+        return 2;
+      default:
+        return -1;
+    }
+  }
+
+  getStatusOptions() {
+    return Object.entries(this.statusMap).map(([value, label]) => ({
+      value: parseInt(value),
+      label
+    }));
+  }
+
+  customFilterStatus(value: any, filter: any): boolean {
+    if (filter === undefined || filter === null) {
+      return true;
+    }
+    
+    if (value === undefined || value === null) {
+      return false;
+    }
+
+    return value === filter;
+  }
+
+  getStatusLabel(status: number | null | undefined): string {
+    if (status === null || status === undefined) return 'Neuf';
+    return this.statusMap[status] || 'Neuf';
   }
 }
